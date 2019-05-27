@@ -39,6 +39,30 @@ def minlevensthein(s, t):
     Returns lower bound for levenshtein distance between s and t
     '''
     return abs(len(s) - len(t))
+
+def get_similar(query: str, words: list) -> list:
+    '''
+    Returns words with lower levenshtein distance from query word
+    :param query:
+    :param words:
+    :return:
+    '''
+    w0 = words[0]
+    d0 = levenshtein(query, w0)
+    cand = [w0]
+    for w in words:
+        if minlevensthein(query, w) > d0:
+            continue
+        else:
+            d = levenshtein(query, w)
+            if d < d0:
+                d0 = d
+                cand = [w]
+                print(d)
+            elif d == d0:
+                cand.append(w)
+    return cand
+
 ##################
 # Importing data #
 ##################
@@ -53,19 +77,8 @@ data = pd.read_csv(path.join(DATA_DIR, DATA_FILE))
 query = 'tempo'
 words = data['word'].values
 counts = data['count'].values
-d0 = levenshtein(query, '')
-cand = [] # list of candidate words
 
 t0 = time.time()
-for i, w in enumerate(words):
-    if i % 1000 == 0: print(i)
-    if minlevensthein(query, w) > d0:
-        continue
-    else:
-        d = levenshtein(query, w)
-        if d < d0:
-            cand = [w]
-        elif d == d0:
-            cand.append(w)
-
+out = get_similar(query, words)
 print(time.time() - t0)
+print(out)
