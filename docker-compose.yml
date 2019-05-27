@@ -1,0 +1,15 @@
+version: '3.5'
+
+services:
+  web_app:
+    build: .
+    image: app
+    container_name: app
+    hostname: app
+    tty: true
+    ports:
+      - "5000:5000"
+    networks:
+      - esnet
+networks:
+  esnet:
