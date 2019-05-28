@@ -9,6 +9,8 @@ services:
     tty: true
     ports:
       - "5000:5000"
+    volumes:
+      - .:/code
     networks:
       - esnet
 networks:

@@ -2,10 +2,12 @@ import time
 import os
 import os.path as path
 import pandas as pd
+from flask import Flask, Response
+import json
 
-#############
-# Functions #
-#############
+####################
+# Helper Functions #
+####################
 
 def memoize(func):
     mem = {}
@@ -40,28 +42,6 @@ def minlevensthein(s, t):
     '''
     return abs(len(s) - len(t))
 
-def get_similar(query: str, words: list) -> list:
-    '''
-    Returns words with lower levenshtein distance from query word
-    :param query:
-    :param words:
-    :return:
-    '''
-    w0 = words[0]
-    d0 = levenshtein(query, w0)
-    cand = [w0]
-    for w in words:
-        if minlevensthein(query, w) > d0:
-            continue
-        else:
-            d = levenshtein(query, w)
-            if d < d0:
-                d0 = d
-                cand = [w]
-                print(d)
-            elif d == d0:
-                cand.append(w)
-    return cand
 
 ##################
 # Importing data #
@@ -73,12 +53,51 @@ assert DATA_FILE in os.listdir(DATA_DIR)
 
 data = pd.read_csv(path.join(DATA_DIR, DATA_FILE))
 
-# get most similar word to query
-query = 'tempo'
-words = data['word'].values
-counts = data['count'].values
+WORDS = data['word'].values
+# counts = data['count'].values
 
-t0 = time.time()
-out = get_similar(query, words)
-print(time.time() - t0)
-print(out)
+#################
+# API functions #
+#################
+
+
+app = Flask(__name__)
+
+@app.route('/', methods = ['GET'])
+def hello_world():
+    return Response('Flask is running', status = 200)
+
+@app.route('/<string:query>')
+def get_similar(query: str) -> list:
+    '''
+    Returns words with lower levenshtein distance from query word
+    :param query:
+    :param words:
+    :return:
+    '''
+    w0 = WORDS[0]
+    d0 = levenshtein(query, w0)
+    cand = [w0]
+    for w in WORDS:
+        if minlevensthein(query, w) > d0:
+            continue
+        else:
+            d = levenshtein(query, w)
+            if d < d0:
+                d0 = d
+                cand = [w]
+            elif d == d0:
+                cand.append(w)
+    out = {'edit_distance': d0,
+           'candidates': cand}
+    return Response(json.dumps(out),
+                    status = 200,
+                    mimetype = 'application/json')
+
+
+########
+# Main #
+########
+
+if __name__ == '__main__':
+    app.run(debug = True, host = '0.0.0.0')
