@@ -12,6 +12,8 @@ import numpy as np
 # Helper Functions #
 ####################
 
+# levenshtein
+
 def memoize(func):
     mem = {}
 
@@ -45,6 +47,8 @@ def minlevensthein(s, t):
     '''
     return abs(len(s) - len(t))
 
+# semantic
+
 def get_ngrams(word, nmin, nmax):
     out = []
     l = len(word)
@@ -75,6 +79,37 @@ def my_distance(word1, word2):
     v1, v2 = get_vector(word1, nmin = lmin), get_vector(word2, nmin = lmin)
     return np.sqrt(np.power(v1 - v2, 2).sum())
 
+# norvig's
+
+def edit(word):
+    #letters = '1234567890£$%&/()=?^qwertyuiopasdfghjklzxcvbnmèé+*òçà°ù§<>,;.:-_'
+    letters = 'qwertyuiopasdfghjklzxcvbnm'
+    #letters = 'aA' # for testing
+    splits = [(word[:i], word[i:]) for i in range(len(word) + 1)]
+    insert = [ p1 + char + p2 for p1, p2 in splits for char in letters]
+    delete = [ p1 + p2[1:] for p1, p2 in splits if len(p2) > 0]
+    replace = [ p1 + char + p2[1:] for p1, p2 in splits if len(p2) > 0 for char in letters]
+    return list({*insert, *delete, *replace})
+
+def edit2(word):
+    out = []
+    for edited in edit(word):
+        out.extend(edit(edited))
+    return list({*out})
+
+def edit3(word):
+    out = []
+    for edited in edit2(word):
+        out.extend(edit(edited))
+    return list({*out})
+
+def filter(words: list, vocab: dict) -> list:
+    return [(w, vocab.get(w)) for w in words if w in vocab]
+
+def candidates(word: str, vocab: dict) -> list:
+    edited = {*edit(word), *edit2(word), word}
+    edited = list(edited)
+    return sorted(filter(edited, vocab), key = lambda x: x[1], reverse = True)
 
 ##################
 # Importing data #
@@ -86,11 +121,8 @@ assert DATA_FILE in os.listdir(DATA_DIR)
 
 data = pd.read_csv(path.join(DATA_DIR, DATA_FILE))
 
-WORDS = data['word'].values
-WORDS = [w.replace('"','').replace("'",'') for w in WORDS]
-WORDS = {*[w for w in WORDS if w]}
-WORDS = list(WORDS)
-# counts = data['count'].values
+VOCAB = data.values
+VOCAB = {w: c for w, c in VOCAB}
 
 ##########################
 # Loading FastText model #
@@ -120,10 +152,10 @@ def get_similar(query: str) -> Response:
     :param words:
     :return:
     '''
-    w0 = WORDS[0]
+    w0 = list(VOCAB.keys())[0]
     d0 = levenshtein(query, w0)
     cand = [w0]
-    for w in WORDS:
+    for w in VOCAB:
         if d0 == 0:
             break
         if minlevensthein(query, w) > d0:
@@ -152,11 +184,26 @@ def get_similar_sem(query: str) -> Response:
     :return:
     '''
     dists = []
-    for i, w in enumerate(WORDS):
+    for i, w in enumerate(VOCAB.keys()):
         #print(i, w)
         dists.append(my_distance(query, w))
-    out = [(w, str(d)) for d, w in sorted(zip(dists, WORDS))]
+    out = [(w, str(d)) for d, w in sorted(zip(dists, VOCAB.keys()))]
     return Response(json.dumps({'out': out[:10]}),
+                    status = 200,
+                    mimetype = 'application/json')
+
+# TODO: use edit distance and store the most similar instead of just the words with lower distance. Then compute similarity using embedding or percentage on edit distance
+# TODO: use data to evaluate different algorithms
+
+@app.route('/<string:query>')
+def get_candidates(query: str) -> Response:
+    '''
+
+    :param query:
+    :return:
+    '''
+    out = candidates(query, VOCAB)
+    return Response(json.dumps({'out': out}),
                     status = 200,
                     mimetype = 'application/json')
 
