@@ -144,7 +144,7 @@ app = Flask(__name__)
 def hello_world():
     return Response('Flask is running', status = 200)
 
-@app.route('/<string:query>/_edit_distance')
+@app.route('/<string:query>/_edit_distance', methods = ['GET'])
 def get_similar(query: str) -> Response:
     '''
     Returns words with lower levenshtein distance from query word
@@ -175,7 +175,7 @@ def get_similar(query: str) -> Response:
                     status = 200,
                     mimetype = 'application/json')
 
-@app.route('/<string:query>/_semantic_distance')
+@app.route('/<string:query>/_semantic_distance', methods = ['GET'])
 def get_similar_sem(query: str) -> Response:
     '''
     Returns words with lower semantic distance from query word
@@ -195,7 +195,7 @@ def get_similar_sem(query: str) -> Response:
 # TODO: use edit distance and store the most similar instead of just the words with lower distance. Then compute similarity using embedding or percentage on edit distance
 # TODO: use data to evaluate different algorithms
 
-@app.route('/<string:query>')
+@app.route('/<string:query>', methods = ['GET'])
 def get_candidates(query: str) -> Response:
     '''
 
