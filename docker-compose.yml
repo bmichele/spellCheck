@@ -6,6 +6,8 @@ services:
     image: app
     container_name: app
     hostname: app
+    environment:
+      CHECK_METHOD: ${METHOD}
     tty: true
     ports:
       - "5000:5000"

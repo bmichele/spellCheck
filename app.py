@@ -4,15 +4,23 @@ import os.path as path
 import pandas as pd
 from flask import Flask, Response
 import json
-from gensim.models.keyedvectors import KeyedVectors
-import numpy as np
-# from gensim.models import FastText as fText
+from spellCheck import NorvigCheck, EditDistanceCheck, SemanticCheck
+from gensim.models import FastText as fText
 import data_cleaning
+# TODO: add logging
 
-
-
-
-
+# TODO: replace with argument parsed from command line
+# parser = argparse.ArgumentParser(prog = 'Spell Check',
+#                                  description = '''
+#                                  Launch a spell check app on localhost:5000.
+#                                  A method argument must be choosen among `norvig`, `edit` or `semantic`.
+#                                   ''')
+# parser.add_argument('method', default='norvig', type = str)
+# args = parser.parse_args()
+# METHOD = args.method
+METHOD = os.environ['CHECK_METHOD']
+assert METHOD in ['norvig', 'edit', 'semantic']
+print('Method selected: {}'.format(METHOD))
 
 
 ##################
@@ -32,10 +40,32 @@ VOCAB = {w: c for w, c in VOCAB}
 # Loading FastText model #
 ##########################
 
-print('Loading embeddings')
-#EMBEDDING = KeyedVectors.load_word2vec_format("./models/wiki-news-300d-1M-subword.vec",binary=False)
-EMBEDDING = KeyedVectors.load("./models/wiki-news-300d-1M-subword_keyedVectors")
 
+MODEL_DIR = 'models/'
+MODEL_FILE = 'wiki.en'    # fasttext embeddings
+
+if METHOD == 'semantic':
+    assert MODEL_FILE + '.bin' in os.listdir(MODEL_DIR)
+    assert MODEL_FILE + '.vec' in os.listdir(MODEL_DIR)
+    print('Loading embeddings')
+    t0 = time.time()
+    EMBEDDING = fText.load_fasttext_format(path.join(MODEL_DIR, MODEL_FILE))
+    print('Time to load embeddings: {}'.format(time.time() - t0))
+
+
+################################
+# Spell Checker initialization #
+################################
+
+if METHOD == 'norvig':
+    # Peter Norvig inspired spell checker
+    spell_check = NorvigCheck(VOCAB)
+elif METHOD == 'edit':
+    # Edit-distance based spell checker
+    spell_check = EditDistanceCheck(VOCAB)
+elif METHOD == 'semantic':
+    # Spell checker based on fasttext word embeddings
+    spell_check = SemanticCheck(VOCAB, EMBEDDING)
 
 #################
 # API functions #
@@ -46,77 +76,28 @@ app = Flask(__name__)
 
 @app.route('/', methods = ['GET'])
 def hello_world():
-    return Response('Flask is running', status = 200)
-
-@app.route('/<string:query>/_edit_distance', methods = ['GET'])
-def get_similar(query: str) -> Response:
-    '''
-    Returns words with lower levenshtein distance from query word
-    :param query:
-    :param words:
-    :return:
-    '''
-    w0 = list(VOCAB.keys())[0]
-    d0 = levenshtein(query, w0)
-    cand = [w0]
-    for w in VOCAB:
-        if d0 == 0:
-            break
-        if minlevensthein(query, w) > d0:
-            continue
-        else:
-            d = levenshtein(query, w)
-            if d < d0:
-                d0 = d
-                cand = [w]
-            elif d == d0:
-                cand.append(w)
-
-    #out = {el: EMBEDDING.wv.similarity(query, el) for el in cand}
-    out = {'edit_distance': d0,
-           'candidates': cand}
-    return Response(json.dumps(out),
-                    status = 200,
-                    mimetype = 'application/json')
-
-@app.route('/<string:query>/_semantic_distance', methods = ['GET'])
-def get_similar_sem(query: str) -> Response:
-    '''
-    Returns words with lower semantic distance from query word
-    :param query:
-    :param words:
-    :return:
-    '''
-    dists = []
-    for i, w in enumerate(VOCAB.keys()):
-        #print(i, w)
-        dists.append(my_distance(query, w))
-    out = [(w, str(d)) for d, w in sorted(zip(dists, VOCAB.keys()))]
-    return Response(json.dumps({'out': out[:10]}),
-                    status = 200,
-                    mimetype = 'application/json')
-
-# TODO: use edit distance and store the most similar instead of just the words with lower distance. Then compute similarity using embedding or percentage on edit distance
-# TODO: use data to evaluate different algorithms
+    return Response('App is running. Method used to provide candidates: {}'.format(METHOD), status = 200)
 
 @app.route('/<string:query>', methods = ['GET'])
-def get_candidates(query: str) -> Response:
+def get_similar(query: str) -> Response:
     '''
-
+    Returns candidates
     :param query:
+    :param words:
     :return:
     '''
-    out = candidates(query, VOCAB)
-    # normalize scores so that sum up to one
-    total = sum([c for _, c in out])
-    out = {w: c/total for w, c in out}
-    return Response(json.dumps({'candidates': out}),
+    #out = {term: score for term, score in spell_check.spell_check(query)}
+    out = {}
+    for cand in spell_check.spell_check(query):
+        out[cand[0]] = cand[1]
+    return Response(json.dumps(out),
                     status = 200,
                     mimetype = 'application/json')
 
 ########
 # Main #
 ########
+
 
 if __name__ == '__main__':
     # TODO: deactivate debug mode when done
