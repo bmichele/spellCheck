@@ -9,13 +9,8 @@ then run
 ```
 cd spellCheck
 make build
-make start
 ```
-to build and run the docker container. To stop the service, run
-```
-make stop
-```
-in the same directory.
+to build the docker container.
 
 ## Run the service
 
@@ -92,6 +87,8 @@ Stop the docker container running
 make stop
 ```
 in the main repo folder.
+
+## Tests
 
 ## Conclusions and future work
 
