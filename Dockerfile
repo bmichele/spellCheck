@@ -4,5 +4,5 @@ ADD requirements.txt .
 RUN pip install -r requirements.txt
 WORKDIR /code
 # ENV CHECK_METHOD=${METHOD}
-#ENTRYPOINT ["python"]
-#CMD ["app.py"]
+ENTRYPOINT ["python"]
+CMD ["app.py"]

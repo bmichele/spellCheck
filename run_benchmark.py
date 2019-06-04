@@ -14,20 +14,25 @@ import sys
 from spellCheck import NorvigCheck, EditDistanceCheck, SemanticCheck
 from nltk.tokenize import word_tokenize
 from gensim.models import FastText as fText
+import requests
+import zipfile
 
 import logging
-logging.basicConfig(filename='run_benchmark.log',level=logging.INFO)
+logger = logging.getLogger('benchmarks')
+c_handler = logging.StreamHandler()
+f_handler = logging.FileHandler('run_benchmark.log')
+logger.addHandler(c_handler)
+logger.addHandler(f_handler)
 
 ############
 # Settings #
 ############
 
 DATA_DIR = 'data/'
-MODEL_DIR = 'models/'
-VOCAB_FILE = 'nhs_unigram.csv'    # dataset containing medical words (assumed to be spelled correctly)
-TEXTS_FILE = 'health_queries.csv' # dataset of user messages
-MODEL_FILE = 'wiki.en'    # fasttext embeddings
-PRINT_TO_FILE = True
+MODEL_DIR = '.'
+VOCAB_FILE = 'unigram_clean.csv'    # dataset containing medical words (assumed to be spelled correctly)
+TEXTS_FILE = 'queries.csv' # dataset of user messages
+MODEL_FILE = 'wiki.simple'    # fasttext embeddings
 
 ##################
 # Importing data #
@@ -48,13 +53,25 @@ messages = pd.read_csv(path.join(DATA_DIR, TEXTS_FILE)).values
 # Loading embeddings #
 ######################
 
+logger.info('Looking for fasttext embeddings in folder {}'.format(path.abspath(MODEL_DIR)))
+if (MODEL_FILE + '.bin' not in os.listdir(MODEL_DIR)) or (MODEL_FILE + '.bin' not in os.listdir(MODEL_DIR)):
+    if (MODEL_FILE + '.zip') not in os.listdir(MODEL_DIR):
+        url = 'https://dl.fbaipublicfiles.com/fasttext/vectors-wiki/{}.zip'.format(MODEL_FILE)
+        logger.info('Downloading {} from {}'.format(MODEL_FILE, url))
+        r = requests.get(url)
+        with open(path.join(MODEL_DIR, MODEL_FILE + '.zip')) as f:
+            f.write(r.content)
+    logger.info('Inflating {} in folder {}'.format(MODEL_FILE, MODEL_DIR))
+    with zipfile.ZipFile(path.join(MODEL_DIR, MODEL_FILE), 'r') as zip_ref:
+        zip_ref.extractall(MODEL_DIR)
+
 assert MODEL_FILE + '.vec' in os.listdir(MODEL_DIR)
 assert MODEL_FILE + '.bin' in os.listdir(MODEL_DIR)
 
-logging.info('Loading embeddings')
+logger.info('Loading embeddings')
 t0 = time.time()
 EMBEDDING = fText.load_fasttext_format(path.join(MODEL_DIR, MODEL_FILE))
-logging.info('Time to load embeddings: {}'.format(time.time() - t0))
+logger.info('Time to load embeddings: {}'.format(time.time() - t0))
 
 #################################
 # Spell Checker initializations #
@@ -94,46 +111,46 @@ for index, message in enumerate(messages):
             #print('|{}|'.format(token))
             out.append([message, token])
 
-logging.info('\n#\n# Spell check: {} unknown words found\n#'.format(len(out)))
+logger.info('\n#\n# Spell check: {} unknown words found\n#'.format(len(out)))
 
-logging.info('Testing NorvigCheck()')
+logger.info('Testing NorvigCheck()')
 candidates_norvig = []
 t0 = time.time()
 for index, el in enumerate(out):
-    if index % 100 == 0: logging.info('...analized {} tokens in {} seconds...'.format(index, time.time() - t0))
+    if index % 100 == 0: logger.info('...analized {} tokens in {} seconds...'.format(index, time.time() - t0))
     guess = spell_check_norvig.spell_check(el[1])
     if not guess:
         guess = ''
     else:
         guess = guess[0][0]
     candidates_norvig.append(guess)
-logging.info('...analized {} tokens in {} seconds.\n'.format(index, time.time() - t0))
+logger.info('...analized {} tokens in {} seconds.\n'.format(index, time.time() - t0))
 
-logging.info('Testing EditDistanceCheck()')
+logger.info('Testing EditDistanceCheck()')
 candidates_edit = []
 t0 = time.time()
 for index, el in enumerate(out):
-    if index % 100 == 0: logging.info('...analized {} tokens in {} seconds...'.format(index, time.time() - t0))
+    if index % 100 == 0: logger.info('...analized {} tokens in {} seconds...'.format(index, time.time() - t0))
     guess = spell_check_edit.spell_check(el[1])
     if not guess:
         guess = ''
     else:
         guess = guess[0][0]
     candidates_edit.append(guess)
-logging.info('...analized {} tokens in {} seconds.\n'.format(index, time.time() - t0))
+logger.info('...analized {} tokens in {} seconds.\n'.format(index, time.time() - t0))
 
-logging.info('Testing SemanticCheck()')
+logger.info('Testing SemanticCheck()')
 candidates_semantic = []
 t0 = time.time()
 for index, el in enumerate(out):
-    if index % 100 == 0: logging.info('...analized {} tokens in {} seconds...'.format(index, time.time() - t0))
+    if index % 100 == 0: logger.info('...analized {} tokens in {} seconds...'.format(index, time.time() - t0))
     guess = spell_check_semantic.spell_check(el[1])
     if not guess:
         guess = ''
     else:
         guess = guess[0][0]
     candidates_semantic.append(guess)
-logging.info('...analized {} tokens in {} seconds.\n'.format(index, time.time() - t0))
+logger.info('...analized {} tokens in {} seconds.\n'.format(index, time.time() - t0))
 
 
 
@@ -147,6 +164,3 @@ results = pd.DataFrame(data = {'sentence': sentences,
                                'guess_SemanticCheck': candidates_semantic})
 
 results.to_csv('data/test_results.csv', index = False)
-
-if PRINT_TO_FILE:
-    print_dest.close()

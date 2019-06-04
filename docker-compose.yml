@@ -8,6 +8,7 @@ services:
     hostname: app
     environment:
       CHECK_METHOD: ${METHOD}
+      RUN_BENCHMARKS: ${BENCHMARKS}
     tty: true
     ports:
       - "5000:5000"

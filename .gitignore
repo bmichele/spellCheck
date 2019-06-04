@@ -3,7 +3,9 @@ data/health_queries_clean.csv
 data/nhs_unigram.csv
 data/nhs_unigram.txt
 data/test_results.csv
-models/*
+wiki.en.bin
+wiki.en.vec
+wiki.en.zip
 .idea/*
 __pycache__/*
 *.log
