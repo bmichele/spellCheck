@@ -22,7 +22,6 @@ def clean_message(sentence: str) -> list:
     '''
     Given a string containing a sentence, returns a list of clean tokens
     '''
-    # TODO: install NLTK and tokenize with word tokenizer
     out = word_tokenize(sentence)
     out = [clean(w.lower()) for w in out if w]
     return out
@@ -30,8 +29,8 @@ def clean_message(sentence: str) -> list:
 # Medical corpus
 #################
 
-IN_FILE = 'data/nhs_unigram.txt'
-OUT_FILE = 'data/nhs_unigram.csv'
+IN_FILE = 'data/unigram.txt'
+OUT_FILE = 'data/unigram_clean.csv'
 
 # load data
 with open(IN_FILE, 'r+') as f:
@@ -57,11 +56,11 @@ df = pd.DataFrame(data = {'word': [w for w, _ in word_counts],
                           'count': [c for _, c in word_counts]})
 df.to_csv(OUT_FILE, index = False)
 
-# Symptoms corpus
+# Query corpus
 ##################
 
-IN_FILE = 'data/health_queries.csv'
-OUT_FILE = 'data/health_queries_clean.csv'
+IN_FILE = 'data/queries.csv'
+OUT_FILE = 'data/queries_clean.csv'
 
 texts = pd.read_csv(IN_FILE).values
 

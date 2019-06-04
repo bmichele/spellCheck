@@ -1,4 +1,8 @@
-data/*
+data/health_queries.csv
+data/health_queries_clean.csv
+data/nhs_unigram.csv
+data/nhs_unigram.txt
+data/test_results.csv
 models/*
 .idea/*
 __pycache__/*

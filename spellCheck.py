@@ -117,7 +117,6 @@ class NorvigCheck:
         self._vocabolary = vocabulary
 
     def spell_check(self, word: str) -> list:
-        # TODO: improve case in which word is a valid word!!!
         out = candidates(word, self._vocabolary)
         # normalize scores so that sum up to one
         total = sum([c for _, c in out])
