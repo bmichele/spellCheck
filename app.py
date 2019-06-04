@@ -21,8 +21,8 @@ logging.basicConfig(#filename='example.log',
 ###################################################
 # get method to be used for spell checking
 METHOD = os.environ['CHECK_METHOD']
+logging.info('METHOD variable set to {}'.format(METHOD))
 assert METHOD in ['norvig', 'edit', 'semantic']
-logging.info('METHOD variable set to {}'.format(CHECK_METHOD))
 # check if the user wants to run the script run_benchmarks.py to test performance of the implemented methods
 RUN_BENCHMARKS = os.environ['RUN_BENCHMARKS'].lower() == 'true'
 logging.info('RUN_BENCHMARKS variable set to {}'.format(RUN_BENCHMARKS))
