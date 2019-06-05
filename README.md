@@ -24,15 +24,23 @@ You should replace it with your own vocabulary file before running the service.
 
 ## Usage
 
+### Settings
+
 The spell check comes with three different methods to suggest candidates and compute scores.
 The method must be specified in the `.env` file before running the service, and can be
 * `norvig`
 * `edit`
 * `semantic`
 
-Below, the three methods are briefly explained.
+I `METHOD=semantic` in the `.env` file, it is possible to choose the [fasttext](https://fasttext.cc) word vectors among the
+models listed [here](https://fasttext.cc/docs/en/pretrained-vectors.html).
+
+To test how the methods perform and compare the results, it is possible to specify `BENCHMARKS=true` in the `.env` file.
+Note that, in order to run the benchmarks, a file `queries.csv` containing sentences must be provided in the `data` folder.
 
 ### Implemented Methods
+
+Here, we briefly explain the implemented methods.
 
 #### Norvig's method
 

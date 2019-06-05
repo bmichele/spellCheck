@@ -1,11 +1,19 @@
+# Full dataset
 data/health_queries.csv
-data/health_queries_clean.csv
-data/nhs_unigram.csv
 data/nhs_unigram.txt
-data/test_results.csv
+
+# FastText models
 wiki.en.bin
 wiki.en.vec
 wiki.en.zip
+wiki.simple.bin
+wiki.simple.vec
+wiki.simple.zip
+
+# logs
+*.log
+
+# pyCharm, pycache, ...
 .idea/*
 __pycache__/*
-*.log
+.DS_Store

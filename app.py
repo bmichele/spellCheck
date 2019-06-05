@@ -5,14 +5,12 @@ import pandas as pd
 from flask import Flask, Response
 import json
 from spellCheck import NorvigCheck, EditDistanceCheck, SemanticCheck
-import requests
-import zipfile
+from utilities import download_embeddings
 from gensim.models import FastText as fText
 import logging
 logging.basicConfig(#filename='example.log',
                     level=logging.DEBUG)
 
-# TODO: add comment about possibility of having a test file in readme file
 # TODO: run benchmarks and report output in readme file (see 'Test' section)
 # TODO: add list of files in readme
 
@@ -57,22 +55,11 @@ if RUN_BENCHMARKS:
 # The fasttext embeddings are loaded only if METHOD is set to 'semantic'
 
 MODEL_DIR = '.'
-MODEL_FILE = 'wiki.simple'    # fasttext embeddings
+MODEL_FILE = os.environ['FASTTEXT_MODEL']    # fasttext embeddings
+
 
 if METHOD == 'semantic':
-    logging.info('Looking for fasttext embeddings in folder {}'.format(path.abspath(MODEL_DIR)))
-    if (MODEL_FILE + '.bin' not in os.listdir(MODEL_DIR)) or (MODEL_FILE + '.bin' not in os.listdir(MODEL_DIR)):
-        if MODEL_FILE + '.zip' not in os.listdir(MODEL_DIR):
-            url = 'https://dl.fbaipublicfiles.com/fasttext/vectors-wiki/{}.zip'.format(MODEL_FILE)
-            logging.info('Downloading {} from {}'.format(MODEL_FILE, url))
-            t0 = time.time()
-            r = requests.get(url)
-            with open(path.join(MODEL_DIR, MODEL_FILE + '.zip')) as f:
-                f.write(r.content)
-            logging.info('Downloaded file in {} seconds'.format(time.time() - t0))
-        logging.info('Inflating {} in folder {}'.format(MODEL_FILE, MODEL_DIR))
-        with zipfile.ZipFile(path.join(MODEL_DIR, MODEL_FILE), 'r') as zip_ref:
-            zip_ref.extractall(MODEL_DIR)
+    download_embeddings(MODEL_DIR, MODEL_FILE)
     assert MODEL_FILE + '.bin' in os.listdir(MODEL_DIR)
     assert MODEL_FILE + '.vec' in os.listdir(MODEL_DIR)
     logging.info('Loading embeddings')
@@ -128,5 +115,4 @@ def get_similar(query: str) -> Response:
 
 
 if __name__ == '__main__':
-    # TODO: deactivate debug mode when done
-    app.run(debug = True, host = '0.0.0.0')
+    app.run(host = '0.0.0.0')

@@ -10,12 +10,10 @@ import os
 import os.path as path
 import time
 import pandas as pd
-import sys
 from spellCheck import NorvigCheck, EditDistanceCheck, SemanticCheck
 from nltk.tokenize import word_tokenize
 from gensim.models import FastText as fText
-import requests
-import zipfile
+from utilities import download_embeddings
 
 import logging
 logger = logging.getLogger('benchmarks')
@@ -32,7 +30,7 @@ DATA_DIR = 'data/'
 MODEL_DIR = '.'
 VOCAB_FILE = 'unigram_clean.csv'    # dataset containing medical words (assumed to be spelled correctly)
 TEXTS_FILE = 'queries.csv' # dataset of user messages
-MODEL_FILE = 'wiki.simple'    # fasttext embeddings
+MODEL_FILE = os.environ['FASTTEXT_MODEL']    # fasttext embeddings
 
 ##################
 # Importing data #
@@ -53,18 +51,7 @@ messages = pd.read_csv(path.join(DATA_DIR, TEXTS_FILE)).values
 # Loading embeddings #
 ######################
 
-logger.info('Looking for fasttext embeddings in folder {}'.format(path.abspath(MODEL_DIR)))
-if (MODEL_FILE + '.bin' not in os.listdir(MODEL_DIR)) or (MODEL_FILE + '.bin' not in os.listdir(MODEL_DIR)):
-    if (MODEL_FILE + '.zip') not in os.listdir(MODEL_DIR):
-        url = 'https://dl.fbaipublicfiles.com/fasttext/vectors-wiki/{}.zip'.format(MODEL_FILE)
-        logger.info('Downloading {} from {}'.format(MODEL_FILE, url))
-        r = requests.get(url)
-        with open(path.join(MODEL_DIR, MODEL_FILE + '.zip')) as f:
-            f.write(r.content)
-    logger.info('Inflating {} in folder {}'.format(MODEL_FILE, MODEL_DIR))
-    with zipfile.ZipFile(path.join(MODEL_DIR, MODEL_FILE), 'r') as zip_ref:
-        zip_ref.extractall(MODEL_DIR)
-
+download_embeddings(MODEL_DIR, MODEL_FILE)
 assert MODEL_FILE + '.vec' in os.listdir(MODEL_DIR)
 assert MODEL_FILE + '.bin' in os.listdir(MODEL_DIR)
 
@@ -151,7 +138,6 @@ for index, el in enumerate(out):
         guess = guess[0][0]
     candidates_semantic.append(guess)
 logger.info('...analized {} tokens in {} seconds.\n'.format(index, time.time() - t0))
-
 
 
 sentences = [el[0] for el in out]
