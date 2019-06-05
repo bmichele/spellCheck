@@ -1,4 +1,5 @@
 import gensim.models.fasttext as fasttext
+import editdistance
 
 ####################
 # Helper Functions #
@@ -88,7 +89,8 @@ class EditDistanceCheck:
 
     def spell_check(self, word: str) -> list:
         w0 = list(self._vocabulary.keys())[0]
-        d0 = levenshtein(word, w0)
+        #d0 = levenshtein(word, w0)
+        d0 = editdistance.eval(word, w0)
         out = [w0]
         for w in self._vocabulary:
             if d0 == 0:
@@ -96,7 +98,8 @@ class EditDistanceCheck:
             if minlevensthein(word, w) > d0:
                 continue
             else:
-                d = levenshtein(word, w)
+                #d = levenshtein(word, w)
+                d = editdistance.eval(word, w)
                 if d < d0:
                     d0 = d
                     out = [w]

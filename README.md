@@ -18,8 +18,8 @@ The spell checker needs, as input, a vocabulary containing correct words with pr
 Typically, the file can be obtained processing a large corpus of correctly spelled texts.
 The probability for each word can be estimated using the respective count.
 
-The vocabulary must be placed in the data folder and named `nhs_unigram.txt`.
-An sample vocabulary containing a limited number of words can be found comes with the repo.
+The vocabulary must be placed in the data folder and named `unigram.txt`.
+A sample vocabulary containing a limited number of words can be found in the folder `data`.
 You should replace it with your own vocabulary file before running the service.
 
 ## Usage
@@ -32,11 +32,11 @@ The method must be specified in the `.env` file before running the service, and 
 * `edit`
 * `semantic`
 
-I `METHOD=semantic` in the `.env` file, it is possible to choose the [fasttext](https://fasttext.cc) word vectors among the
+When `METHOD=semantic` in the `.env` file, it is possible to choose the [fasttext](https://fasttext.cc) word vectors among the
 models listed [here](https://fasttext.cc/docs/en/pretrained-vectors.html).
 
-To test how the methods perform and compare the results, it is possible to specify `BENCHMARKS=true` in the `.env` file.
-Note that, in order to run the benchmarks, a file `queries.csv` containing sentences must be provided in the `data` folder.
+To test how the different methods perform and compare the results, it is possible to specify `BENCHMARKS=true` in the `.env` file.
+Note that, in order to run the benchmarks, a file `queries.csv` containing sentences with misspelled words must be provided in the `data` folder.
 
 ### Implemented Methods
 
@@ -45,7 +45,7 @@ Here, we briefly explain the implemented methods.
 #### Norvig's method
 
 Setting `METHOD=norvig` in the `.env` file, the spell-check algorithm used is similar to the algorithm explained by
-Peter Norvig in his [post](https://norvig.com/spell-correct.html).
+Peter Norvig in his [blog post](https://norvig.com/spell-correct.html).
 Essentially, the spell checker returns candidates with edit distance up to 2 from the query term taken from the given
 vocabulary. The candidates are sorted by the counts specified in the vocabulary (higher count implies higher score). 
 
@@ -53,14 +53,14 @@ vocabulary. The candidates are sorted by the counts specified in the vocabulary 
 
 Setting `METHOD=edit` in the `.env` file, the spell-check algorithm returns, among the vocabulary's words, those that
 have the lower edit distance. Each candidate comes with a score computed from the word counts reported in the vocabulary
-(higher count implies higher score). The implementation given in this repository is quite efficient (it computes the
+(higher count implies higher score). The implementation given in this repository is quite inefficient (it computes the
 [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) of the query term with almost every word in
 the given vocabulary) and should be improved, e.g. using a trie (see this [blog post](http://stevehanov.ca/blog/index.php?id=114)
 for an example).
 
 #### Semantic distance
 
-Setting `METHOD=semantic` in the `.env` file, given a misspelled word. the algorithm provides the first 10 closest words
+Setting `METHOD=semantic` in the `.env` file, given a misspelled word, the algorithm provides the first 10 closest words
  of the vocabulary.
 The distance is computed as the euclidean distance from the misspelled word to the vocabulary's words. The algorithm
 uses the [FastText](https://fasttext.cc) embeddings, which provide vectors for out-of-vocabulary words.
@@ -74,7 +74,10 @@ Start the docker container running
 ```
 make start
 ```
-in the main repo folder.
+in the main repo folder. Another option, which allows to inspect what the app is doing, is to run
+```
+docker-compose up
+```
 
 Go to `http://localhost:5000` to check if the application is running.
 To get candidatess for a misspelled word, enter the url `http://localhost:5000/tesr`.
@@ -88,6 +91,8 @@ You should get a json with candidates and their respective scores.
 }
 ```
 
+_DISCLAIMER_ The result strongly depends on the vocabulary file, so you will not get this result using the sample files provided here.
+
 ### Stopping the app
 
 Stop the docker container running
@@ -100,6 +105,8 @@ in the main repo folder.
 
 ## Conclusions and future work
 
+* improve EditCheck using a trie
+* combine the methods
 
 ## Files
 

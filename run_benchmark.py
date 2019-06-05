@@ -19,9 +19,7 @@ from utilities import download_embeddings
 
 import logging
 logger = logging.getLogger('benchmarks')
-c_handler = logging.StreamHandler()
 f_handler = logging.FileHandler('run_benchmark.log')
-logger.addHandler(c_handler)
 logger.addHandler(f_handler)
 
 ############
@@ -102,6 +100,7 @@ for index, message in enumerate(messages):
 
 logger.info('\n#\n# Spell check: {} unknown words found\n#'.format(len(out)))
 
+'''
 logger.info('Testing NorvigCheck()')
 candidates_norvig = []
 t0 = time.time()
@@ -114,6 +113,7 @@ for index, el in enumerate(out):
         guess = guess[0][0]
     candidates_norvig.append(guess)
 logger.info('...analized {} tokens in {} seconds.\n'.format(index, time.time() - t0))
+'''
 
 logger.info('Testing EditDistanceCheck()')
 candidates_edit = []
