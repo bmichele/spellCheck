@@ -12,7 +12,6 @@ logging.basicConfig(#filename='example.log',
                     level=logging.DEBUG)
 
 # TODO: run benchmarks and report output in readme file (see 'Test' section)
-# TODO: add list of files in readme
 
 ###################################################
 # Read environment variables defined in .env file #

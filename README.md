@@ -100,13 +100,34 @@ in the main repo folder.
 
 ## Conclusions and future work
 
+
 ## Files
 
-* `spellCheck.py` file containing three different spell checker implementations
-* `app.py` implementation of Flask service
-* `EDA.py` script to get some stats about the datasets
-* `data_cleaning.py` script to process files stored in folder `./data`
-* `run_benchmark.py` file to test the three spellCheck implementations
-* `Dockerfile` docker file
-* `docker-compose.py` docker compose file
-* `requirements.txt` requirements
+* `app.py` run Flask service.
+* `spellCheck.py` file containing three different spell checker implementations.
+* `utilities.py` contains definitions of some helper functions.
+* `data/unigram.txt` sample file to be replaced with your own vocabulary file (should be formatted in the same way).
+* `data/queries.csv` sample file to be replaced with your own file (should be formatted in the same way).
+* `data_cleaning.py` script to process files stored in folder `data` before running the app.
+* `.env` configuration file to set method, semantic model, and specify if benchmarks should be run when app is launched.
+* `run_benchmark.py` file to test the different spell check implementations (run if $RUN_BENCHMARKS is set to `true` in `.env` file).
+
+Docker-related:
+* `Dockerfile` docker file for service.
+* `docker-compose.py` docker compose file for service.
+* `requirements.txt` python packages installed in docker container.
+
+### Output files
+
+Running the app, some files are produced.
+
+Files produced by `data_cleaning.py`:
+* `data/unigram_clean.csv` vocabulary file formatted in csv obtained from `unigram.txt`. Each line correspond to a word. Columns are 'word' and 'count'.
+* `data/queries_clean.csv` contains the words that are present in the file `queries.csv`. Each word is reported with the corresponding count.
+
+Other files:
+* `run_benchmarks.log` log file containing benchmarks results.
+* `data/test_results.csv` comparison of results obtained using the implemented spell-check methods. Each line reports:
+context of the misspelled word, misspelled word, best candidate from NorvigCheck, EditDistanceCheck, SemanticCheck.
+The file is produced running `run_benchmarks.py`.
+* fasttext model files downloaded to use SemanticCheck.

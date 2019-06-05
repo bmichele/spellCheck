@@ -9,6 +9,7 @@ services:
     environment:
       CHECK_METHOD: ${METHOD}
       RUN_BENCHMARKS: ${BENCHMARKS}
+      FASTTEXT_MODEL: ${FASTTEXT_MODEL}
     tty: true
     ports:
       - "5000:5000"

@@ -11,6 +11,8 @@ import os.path as path
 import time
 import pandas as pd
 from spellCheck import NorvigCheck, EditDistanceCheck, SemanticCheck
+import nltk
+nltk.download('punkt')
 from nltk.tokenize import word_tokenize
 from gensim.models import FastText as fText
 from utilities import download_embeddings
