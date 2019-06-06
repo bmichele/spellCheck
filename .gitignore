@@ -2,6 +2,9 @@
 data/health_queries.csv
 data/nhs_unigram.txt
 
+# Results
+results/*
+
 # FastText models
 wiki.en.bin
 wiki.en.vec

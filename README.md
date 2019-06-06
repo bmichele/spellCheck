@@ -56,7 +56,8 @@ have the lower edit distance. Each candidate comes with a score computed from th
 (higher count implies higher score). The implementation given in this repository is quite inefficient (it computes the
 [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) of the query term with almost every word in
 the given vocabulary) and should be improved, e.g. using a trie (see this [blog post](http://stevehanov.ca/blog/index.php?id=114)
-for an example).
+for an example). For this reason, the implemented `levenshtein` function has been replaced by the edit distance function
+provided by the [editdistance](https://github.com/aflc/editdistance) package.
 
 #### Semantic distance
 
@@ -101,12 +102,48 @@ make stop
 ```
 in the main repo folder.
 
-## Tests
+## Results
 
-## Conclusions and future work
+The methods have been tested against a corpus of about 27000 sentences containing typos, using a vocabulary of 23000
+unique tokens.
+The sentences contained, counting duplicates, 5935 unknown words. The `run_benchmarks.py` script produced the following output:
 
-* improve EditCheck using a trie
-* combine the methods
+```text
+Loading embeddings
+Time to load embeddings: 46.77863526344299
+
+#
+# Spell check: 5935 unknown words found
+#
+Testing NorvigCheck()
+[...]
+...analized 5935 tokens in 330.8887412548065 seconds.
+
+Testing EditDistanceCheck()
+[...]
+...analized 5935 tokens in 100.25745248794556 seconds.
+
+Testing SemanticCheck()
+[...]
+...analized 5935 tokens in 10342.194310426712 seconds.
+```
+
+The best performance (in terms of CPU time) is achieved returning, for each unknown word, the words with the lower edit
+distance that are present in the vocabulary (`EditDistanceCheck()` method). The fact that this naive implementation is the fastest is due to the fact
+that the levenshtein distance is computed with C++ and Cython.
+
+The performance of the Norvig's method `NorvigCheck()` is very good, but the method is not able to provide a candidate if there is no
+vocabulary word with an edit distance <= 2 with respect to the misspelled word.
+
+The method `SemanticCheck()`, based on semantic similarity between the misspelled word and the vocabulary words is the slowest.
+It has been implemented with the only purpose of checking how the FastText word vectors can be used to find distances
+between known words and out-of-vocabulary words. Indeed, the model is able to provide word vectors even for misspelled
+words.
+
+Analyzing sentences with misspelled words, it is possible to see how `EditDistanceCheck()` and `NorvigCheck()` usually return
+consistent results. `SemanticCheck()` returns funky results, but it might be used in combination with the other methods.
+For instance, it could be used in the computation of the candidates' scores (e.g. taking the candidates of the other methods and weighting
+the scores using the distance in the embedding space).
 
 ## Files
 
@@ -138,3 +175,11 @@ Other files:
 context of the misspelled word, misspelled word, best candidate from NorvigCheck, EditDistanceCheck, SemanticCheck.
 The file is produced running `run_benchmarks.py`.
 * fasttext model files downloaded to use SemanticCheck.
+
+## Acknowledgments
+
+* [Flask](http://flask.pocoo.org)
+* [gensim](https://radimrehurek.com/gensim/)
+* [editdistance](https://github.com/aflc/editdistance)
+* [nltk](https://www.nltk.org)
+* [pandas](https://pandas.pydata.org)

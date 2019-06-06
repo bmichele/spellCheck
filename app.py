@@ -9,9 +9,7 @@ from utilities import download_embeddings
 from gensim.models import FastText as fText
 import logging
 logging.basicConfig(#filename='example.log',
-                    level=logging.DEBUG)
-
-# TODO: run benchmarks and report output in readme file (see 'Test' section)
+                    level=logging.INFO)
 
 ###################################################
 # Read environment variables defined in .env file #
@@ -88,9 +86,11 @@ elif METHOD == 'semantic':
 
 app = Flask(__name__)
 
+
 @app.route('/', methods = ['GET'])
 def hello_world():
     return Response('App is running. Method used to provide candidates: {}'.format(METHOD), status = 200)
+
 
 @app.route('/<string:query>', methods = ['GET'])
 def get_similar(query: str) -> Response:
@@ -100,7 +100,6 @@ def get_similar(query: str) -> Response:
     :param words:
     :return:
     '''
-    #out = {term: score for term, score in spell_check.spell_check(query)}
     out = {}
     for cand in spell_check.spell_check(query):
         out[cand[0]] = cand[1]
