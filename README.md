@@ -142,8 +142,8 @@ words.
 
 Analyzing sentences with misspelled words, it is possible to see how `EditDistanceCheck()` and `NorvigCheck()` usually return
 consistent results. `SemanticCheck()` returns funky results, but it might be used in combination with the other methods.
-For instance, it could be used in the computation of the candidates' scores (e.g. taking the candidates of the other methods and weighting
-the scores using the distance in the embedding space).
+For instance, it could be used in the computation of the candidates' scores (e.g. considering the context in which the
+misspelled word is used and providing the candidate with the highest semantic similarity).
 
 ## Files
 
